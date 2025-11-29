@@ -1,0 +1,141 @@
+import json
+
+# --- 1. DATOS DE LA TARIFA ISR MENSUAL 2025 (Referencia) ---
+# [Límite Inferior (li), Límite Superior (ls), Cuota Fija (cf), % sobre Excedente (pe)]
+# NOTA: Los valores deben ser validados con las tablas oficiales del SAT para 2025.
+ISR_TABLE_MONTHLY = [
+    {'li': 0.01, 'ls': 746.04, 'cf': 0.00, 'pe': 0.0192},
+    {'li': 746.05, 'ls': 6332.05, 'cf': 14.32, 'pe': 0.0640},
+    {'li': 6332.06, 'ls': 11128.01, 'cf': 371.83, 'pe': 0.1088},
+    {'li': 11128.02, 'ls': 12935.82, 'cf': 893.63, 'pe': 0.1600},
+    {'li': 12935.83, 'ls': 15487.71, 'cf': 1182.88, 'pe': 0.1792},
+    {'li': 15487.72, 'ls': 31236.49, 'cf': 1640.18, 'pe': 0.2136},
+    {'li': 31236.50, 'ls': 49233.00, 'cf': 5004.12, 'pe': 0.2352},
+    {'li': 49233.01, 'ls': 93993.90, 'cf': 9236.89, 'pe': 0.3000},
+    {'li': 93993.91, 'ls': 125325.20, 'cf': 22665.17, 'pe': 0.3200},
+    {'li': 125325.21, 'ls': 375975.61, 'cf': 32691.18, 'pe': 0.3400},
+    {'li': 375975.62, 'ls': float('inf'), 'cf': 117912.32, 'pe': 0.3500}
+]
+
+def format_currency(amount):
+    """Formatea un número a moneda MXN."""
+    return f"${amount:,.2f} MXN"
+
+def get_user_input():
+    """Solicita los datos necesarios al usuario."""
+    print("\n--- INGRESO DE DATOS DEL EMPLEADO ---")
+    
+    # Manejo de errores para inputs numéricos
+    def safe_input(prompt, default_value):
+        while True:
+            try:
+                # Mostrar el valor por defecto para referencia
+                user_input = input(f"{prompt} (Ej. {default_value}): ")
+                if not user_input:
+                    return default_value
+                return float(user_input)
+            except ValueError:
+                print("Entrada inválida. Por favor, ingresa un número.")
+
+    sdi = safe_input("Salario Diario Integrado (SDI)", 500.00)
+    dias_vacaciones = safe_input("Días de Vacaciones a Pagar", 14.0)
+    prima_porcentaje = safe_input("% Prima Vacacional (Ej. 0.25 para 25%)", 0.25)
+    ingreso_ordinario = safe_input("Ingreso Ordinario Gravable del Mes (Sin Vacaciones)", 15000.00)
+    uma_diaria = safe_input("UMA Diaria 2025 (Referencia)", 108.57)
+
+    return sdi, dias_vacaciones, prima_porcentaje, ingreso_ordinario, uma_diaria
+
+def calcular_isr_vacacional(sdi, dias_vacaciones, prima_porcentaje, ingreso_ordinario, uma_diaria):
+    """
+    Calcula el ISR sobre la prima vacacional utilizando el Método del Art. 174 RLISR.
+    """
+    
+    # --- B. Cálculo de la Prima Vacacional y Exención ---
+    pago_salario_vacacional = sdi * dias_vacaciones
+    prima_total = pago_salario_vacacional * prima_porcentaje
+    monto_exento = 15 * uma_diaria
+    
+    # La parte gravable es el excedente del monto exento, mínimo 0
+    prima_gravable = max(0, prima_total - monto_exento)
+
+    # --- C. Cálculo de la Tasa de Retención (sobre Ingreso Ordinario) ---
+    isr_ordinario = 0
+    tasa_efectiva = 0
+
+    if ingreso_ordinario > 0:
+        # 1. Buscar el rango de ISR aplicable al Ingreso Ordinario
+        rango_isr = next((r for r in ISR_TABLE_MONTHLY if r['li'] <= ingreso_ordinario <= r['ls']), None)
+
+        if rango_isr:
+            # 2. Excedente sobre Límite Inferior (LI)
+            excedente = ingreso_ordinario - rango_isr['li']
+            
+            # 3. Impuesto Marginal
+            impuesto_marginal = excedente * rango_isr['pe']
+            
+            # 4. ISR Ordinario
+            isr_ordinario = rango_isr['cf'] + impuesto_marginal
+
+            # 5. Tasa Efectiva de Retención
+            tasa_efectiva = isr_ordinario / ingreso_ordinario
+        else:
+            print("\n[ADVERTENCIA]: El ingreso ordinario no se encuentra en la tabla ISR.")
+
+    # --- D. Retención Final de ISR ---
+    
+    # ISR a Retener sobre Prima Vacacional Gravable
+    isr_prima = prima_gravable * tasa_efectiva
+
+    # ISR Total a Retener en el Periodo
+    isr_total = isr_ordinario + isr_prima
+
+    # Total Neto a Pagar al Empleado
+    neto_pagar = (ingreso_ordinario + prima_total) - isr_total
+
+    return {
+        'sdi': sdi,
+        'dias_vacaciones': dias_vacaciones,
+        'prima_total': prima_total,
+        'monto_exento': monto_exento,
+        'prima_gravable': prima_gravable,
+        'ingreso_ordinario': ingreso_ordinario,
+        'isr_ordinario': isr_ordinario,
+        'tasa_efectiva': tasa_efectiva,
+        'isr_prima': isr_prima,
+        'isr_total': isr_total,
+        'neto_pagar': neto_pagar
+    }
+
+def print_results(results):
+    """Imprime los resultados del cálculo en la consola."""
+    print("\n" + "="*50)
+    print("         ✅ RESULTADOS DEL CÁLCULO ISR VACACIONAL         ")
+    print("="*50)
+    
+    print("\n--- RESUMEN DE PRIMA VACACIONAL ---")
+    print(f"Prima Vacacional Total:       {format_currency(results['prima_total'])}")
+    print(f"Monto Exento (15 UMA):        {format_currency(results['monto_exento'])}")
+    print(f"--------------------------------------------------")
+    print(f"PRIMA VACACIONAL GRAVABLE:    {format_currency(results['prima_gravable'])}")
+
+    print("\n--- CÁLCULO ISR (Art. 174 RLISR) ---")
+    print(f"Ingreso Ordinario Gravable:   {format_currency(results['ingreso_ordinario'])}")
+    print(f"ISR Ordinario Calculado:      {format_currency(results['isr_ordinario'])}")
+    print(f"Tasa Efectiva de Retención:   {results['tasa_efectiva'] * 100:.2f}%")
+    print(f"--------------------------------------------------")
+    print(f"ISR sobre Prima Gravable:     {format_currency(results['isr_prima'])}")
+
+    print("\n--- RETENCIÓN FINAL ---")
+    print(f"ISR Total a Retener:          {format_currency(results['isr_total'])}")
+    print(f"TOTAL NETO A PAGAR:           {format_currency(results['neto_pagar'])}")
+    print("="*50)
+
+if __name__ == "__main__":
+    sdi, dias_vacaciones, prima_porcentaje, ingreso_ordinario, uma_diaria = get_user_input()
+    
+    # Se añade un manejo básico de error si el SDI o Ingreso son cero
+    if sdi <= 0 or ingreso_ordinario <= 0:
+        print("\n[ERROR]: El Salario Diario Integrado y el Ingreso Ordinario deben ser mayores a cero.")
+    else:
+        resultados = calcular_isr_vacacional(sdi, dias_vacaciones, prima_porcentaje, ingreso_ordinario, uma_diaria)
+        print_results(resultados)
