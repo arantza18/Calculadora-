@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora ISR Vacacional 2025</title>
+    <!-- Incluyendo Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos personalizados para la tipografía */
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+        .card { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        .input-group input, .input-group select { transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+        .input-group input:focus, .input-group select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-extrabold text-blue-800 mb-6 text-center">
+            Calculadora ISR Prima Vacacional 🇲🇽
+        </h1>
+        <p class="text-center text-gray-600 mb-8">
+            Método de cálculo Art. 174 RLISR (Tasa Efectiva) - Valores 2025
+        </p>
+
+        <div class="bg-white p-6 md:p-10 rounded-xl card grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- SECCIÓN 1: INPUTS (Datos del Empleado) -->
+            <div class="lg:col-span-1 border-r lg:pr-8">
+                <h2 class="text-xl font-bold text-blue-700 mb-6 border-b pb-2">1. Datos del Empleado</h2>
+                
+                <div class="input-group mb-4">
+                    <label for="sdi" class="block text-sm font-medium text-gray-700">Salario Diario Integrado (SDI) $</label>
+                    <input type="number" id="sdi" value="500.00" class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" min="0.01" step="0.01">
+                </div>
+
+                <div class="input-group mb-4">
+                    <label for="diasVacaciones" class="block text-sm font-medium text-gray-700">Días de Vacaciones a Pagar</label>
+                    <input type="number" id="diasVacaciones" value="14" class="mt-1 p-2 w-full border border-gray-300 rounded-lg" min="1" step="1">
+                </div>
+                
+                <div class="input-group mb-4">
+                    <label for="primaPorcentaje" class="block text-sm font-medium text-gray-700">% Prima Vacacional (Ej. 0.25)</label>
+                    <input type="number" id="primaPorcentaje" value="0.25" class="mt-1 p-2 w-full border border-gray-300 rounded-lg" min="0" step="0.01">
+                </div>
+                
+                <div class="input-group mb-4">
+                    <label for="ingresoOrdinario" class="block text-sm font-medium text-gray-700">Ingreso Ordinario Gravable del Mes (Sin Vacaciones) $</label>
+                    <input type="number" id="ingresoOrdinario" value="15000.00" class="mt-1 p-2 w-full border border-gray-300 rounded-lg" min="0.01" step="0.01">
+                </div>
+                
+                <div class="input-group mb-4">
+                    <label for="umaDiaria" class="block text-sm font-medium text-gray-700">UMA Diaria 2025 (Referencia) $</label>
+                    <input type="number" id="umaDiaria" value="108.57" class="mt-1 p-2 w-full border border-gray-300 rounded-lg font-bold bg-yellow-50" min="0.01" step="0.01">
+                    <p class="text-xs text-yellow-700 mt-1">¡Verificar UMA oficial 2025!</p>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: OUTPUTS (Cálculos Intermedios y Resultado Final) -->
+            <div class="lg:col-span-2">
+                <h2 class="text-xl font-bold text-blue-700 mb-6 border-b pb-2">2. Resultados del Cálculo</h2>
+
+                <!-- Resultados B: Prima Vacacional y Exención -->
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-700 mb-3">Cálculo de la Prima Vacacional</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <p class="text-gray-600">Prima Vacacional Total:</p>
+                        <p id="primaTotal" class="text-right font-medium">$0.00</p>
+                        
+                        <p class="text-gray-600">Monto Exento (15 x UMA):</p>
+                        <p id="montoExento" class="text-right font-medium text-green-700">$0.00</p>
+
+                        <p class="text-gray-900 font-bold">Prima Vacacional Gravable (Sujeta a ISR):</p>
+                        <p id="primaGravable" class="text-right font-extrabold text-red-700">$0.00</p>
+                    </div>
+                </div>
+
+                <!-- Resultados C: Tasa Efectiva -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">Tasa Efectiva de Retención (Art. 174)</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <p class="text-gray-600">ISR Ordinario (Sueldo Mensual):</p>
+                        <p id="isrOrdinario" class="text-right font-medium">$0.00</p>
+                        
+                        <p class="text-gray-900 font-bold">Tasa Efectiva de Retención:</p>
+                        <p id="tasaEfectiva" class="text-right font-extrabold text-blue-600">0.00%</p>
+                    </div>
+                </div>
+
+                <!-- Resultados D: Retención Final -->
+                <div class="mb-6 p-4 bg-green-50 rounded-lg border-2 border-green-300">
+                    <h3 class="text-xl font-extrabold text-green-800 mb-3">RESUMEN DE RETENCIÓN</h3>
+                    <div class="grid grid-cols-2 gap-4 text-base">
+                        <p class="text-gray-800 font-semibold">ISR a Retener sobre Prima Vacacional Gravable:</p>
+                        <p id="isrPrima" class="text-right font-bold text-red-800">$0.00</p>
+                        
+                        <p class="text-gray-800 font-semibold">ISR Total a Retener en el Periodo (Incl. Ordinario):</p>
+                        <p id="isrTotal" class="text-right font-bold text-red-800">$0.00</p>
+
+                        <hr class="col-span-2 my-2 border-green-300">
+
+                        <p class="text-gray-900 text-lg font-extrabold">TOTAL NETO A PAGAR AL EMPLEADO:</p>
+                        <p id="netoPagar" class="text-right text-lg font-extrabold text-green-900">$0.00</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- SECCIÓN 3: TABLA ISR DE REFERENCIA -->
+        <div class="mt-8 p-6 bg-gray-100 rounded-xl card">
+            <h3 class="text-lg font-bold text-gray-700 mb-4">Tabla de Tarifa Mensual de ISR 2025 (Referencia)</h3>
+            <div id="isrTable" class="overflow-x-auto">
+                <!-- La tabla se generará aquí por JS -->
+            </div>
+            <p class="text-xs text-gray-500 mt-3">Fuente: Valores referenciales basados en el Anexo 8 de la RMF 2025. Los valores oficiales deben ser consultados en el DOF o SAT.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Definición de la Tabla de Tarifa Mensual de ISR 2025 (Referencia)
+        // [Límite Inferior, Límite Superior, Cuota Fija, % sobre Excedente]
+        const ISR_TABLE_MONTHLY = [
+            { li: 0.01, ls: 746.04, cf: 0.00, pe: 0.0192 },
+            { li: 746.05, ls: 6332.05, cf: 14.32, pe: 0.0640 },
+            { li: 6332.06, ls: 11128.01, cf: 371.83, pe: 0.1088 },
+            { li: 11128.02, ls: 12935.82, cf: 893.63, pe: 0.1600 },
+            { li: 12935.83, ls: 15487.71, cf: 1182.88, pe: 0.1792 },
+            { li: 15487.72, ls: 31236.49, cf: 1640.18, pe: 0.2136 },
+            { li: 31236.50, ls: 49233.00, cf: 5004.12, pe: 0.2352 },
+            { li: 49233.01, ls: 93993.90, cf: 9236.89, pe: 0.3000 },
+            { li: 93993.91, ls: 125325.20, cf: 22665.17, pe: 0.3200 },
+            { li: 125325.21, ls: 375975.61, cf: 32691.18, pe: 0.3400 },
+            { li: 375975.62, ls: Infinity, cf: 117912.32, pe: 0.3500 }
+        ];
+
+        // Función auxiliar para formato de moneda
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        };
+
+        // Función para generar la tabla ISR en el HTML
+        const renderISRTable = () => {
+            const tableContainer = document.getElementById('isrTable');
+            let html = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Límite Inferior ($)</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Límite Superior ($)</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Cuota Fija ($)</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">% sobre Excedente</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            ISR_TABLE_MONTHLY.forEach(row => {
+                const lsDisplay = row.ls === Infinity ? 'En adelante' : formatCurrency(row.ls).replace('MX$', '');
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${formatCurrency(row.li).replace('MX$', '')}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${lsDisplay}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${formatCurrency(row.cf).replace('MX$', '')}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${(row.pe * 100).toFixed(2)}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            tableContainer.innerHTML = html;
+        };
+
+        // Función principal de cálculo
+        const calcularISR = () => {
+            // 1. Obtener valores de entrada y validar
+            const SDI = parseFloat(document.getElementById('sdi').value) || 0;
+            const diasVacaciones = parseFloat(document.getElementById('diasVacaciones').value) || 0;
+            const primaPorcentaje = parseFloat(document.getElementById('primaPorcentaje').value) || 0;
+            const ingresoOrdinario = parseFloat(document.getElementById('ingresoOrdinario').value) || 0;
+            const umaDiaria = parseFloat(document.getElementById('umaDiaria').value) || 0;
+
+            // --- B. Cálculo de la Prima Vacacional y Exención ---
+            
+            // Pago de Salario por Vacaciones: Salario Diario * Días
+            const pagoSalarioVacacional = SDI * diasVacaciones;
+            
+            // Prima Vacacional Total: Salario Vacacional * % Prima
+            const primaTotal = pagoSalarioVacacional * primaPorcentaje;
+            
+            // Monto Exento: 15 * UMA
+            const montoExento = 15 * umaDiaria;
+            
+            // Prima Vacacional Gravable: MAX(0, Prima Total - Monto Exento)
+            const primaGravable = Math.max(0, primaTotal - montoExento);
+
+            // Actualizar resultados B
+            document.getElementById('primaTotal').textContent = formatCurrency(primaTotal);
+            document.getElementById('montoExento').textContent = formatCurrency(montoExento);
+            document.getElementById('primaGravable').textContent = formatCurrency(primaGravable);
+
+            // Si no hay ingreso ordinario o la prima no es gravable, terminamos el cálculo ISR
+            if (ingresoOrdinario <= 0) {
+                document.getElementById('isrOrdinario').textContent = formatCurrency(0);
+                document.getElementById('tasaEfectiva').textContent = '0.00%';
+                document.getElementById('isrPrima').textContent = formatCurrency(0);
+                document.getElementById('isrTotal').textContent = formatCurrency(0);
+                document.getElementById('netoPagar').textContent = formatCurrency(ingresoOrdinario + primaTotal);
+                return;
+            }
+
+            // --- C. Cálculo de la Tasa de Retención (Art. 174 RLISR) ---
+
+            // 1. Buscar rango en la tabla ISR para el Ingreso Ordinario (C7)
+            const rangoISR = ISR_TABLE_MONTHLY.find(r => ingresoOrdinario >= r.li && ingresoOrdinario <= r.ls);
+
+            let isrOrdinario = 0;
+            let tasaEfectiva = 0;
+
+            if (rangoISR) {
+                // Excedente sobre LI
+                const excedente = ingresoOrdinario - rangoISR.li;
+                
+                // Impuesto Marginal
+                const impuestoMarginal = excedente * rangoISR.pe;
+                
+                // ISR Ordinario (Cuota Fija + Impuesto Marginal)
+                isrOrdinario = rangoISR.cf + impuestoMarginal;
+
+                // Tasa Efectiva de Retención
+                tasaEfectiva = isrOrdinario / ingresoOrdinario;
+            }
+
+            // Actualizar resultados C
+            document.getElementById('isrOrdinario').textContent = formatCurrency(isrOrdinario);
+            document.getElementById('tasaEfectiva').textContent = `${(tasaEfectiva * 100).toFixed(2)}%`;
+
+            // --- D. Retención Final de ISR por Concepto de Vacaciones ---
+
+            // ISR a Retener sobre Prima Vacacional Gravable
+            const isrPrima = primaGravable * tasaEfectiva;
+
+            // ISR Total a Retener en el Periodo
+            const isrTotal = isrOrdinario + isrPrima;
+
+            // Total Neto a Pagar al Empleado
+            // (Ingreso Ordinario + Prima Total) - ISR Total Retenido
+            const netoPagar = (ingresoOrdinario + primaTotal) - isrTotal;
+
+            // Actualizar resultados D
+            document.getElementById('isrPrima').textContent = formatCurrency(isrPrima);
+            document.getElementById('isrTotal').textContent = formatCurrency(isrTotal);
+            document.getElementById('netoPagar').textContent = formatCurrency(netoPagar);
+
+        };
+
+        // Event Listeners para recalcular al cambiar cualquier input
+        document.addEventListener('DOMContentLoaded', () => {
+            renderISRTable();
+            calcularISR(); // Cálculo inicial con valores de ejemplo
+
+            document.getElementById('sdi').addEventListener('input', calcularISR);
+            document.getElementById('diasVacaciones').addEventListener('input', calcularISR);
+            document.getElementById('primaPorcentaje').addEventListener('input', calcularISR);
+            document.getElementById('ingresoOrdinario').addEventListener('input', calcularISR);
+            document.getElementById('umaDiaria').addEventListener('input', calcularISR);
+        });
+
+    </script>
+</body>
+</html>
