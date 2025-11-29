@@ -1,0 +1,20 @@
+{
+  "name": "calculadora-isr-vacacional",
+  "version": "1.0.0",
+  "description": "Calculadora de ISR para Prima Vacacional mexicana utilizando el método de Tasa Efectiva (Art. 174 RLISR).",
+  "main": "index.html",
+  "scripts": {
+    "start": "echo 'Este es un sitio estático, abre index.html.'",
+    "deploy": "vercel"
+  },
+  "keywords": [
+    "isr",
+    "prima",
+    "vacacional",
+    "mexico",
+    "calculadora",
+    "static"
+  ],
+  "author": "",
+  "license": "ISC"
+}
